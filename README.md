@@ -1,53 +1,29 @@
-# GoGo Coffee Café — Concurrent Programming Simulation
+# ☕ GoGo Coffee Café
 
-A Java-based multi-threaded simulation built for **CT074-3-2 Concurrent Programming** (Asia Pacific University), modeling a coffee café where baristas and customers interact concurrently under realistic resource constraints.
+A Java simulation of a chaotic little café where 3 baristas try to keep up with 20 caffeine-craving customers, one shared espresso machine, one milk frother, and a single juice tap. Built for my Concurrent Programming module (CT074-3-2) at APU.
 
-## 📖 Overview
+Basically — what happens when multiple threads all want the same coffee machine at once, and nobody's allowed to just kill a thread to make the problem go away.
 
-This project simulates a small café with:
-- **3 baristas** working independently
-- **5 tables** (2 chairs each)
-- **1 espresso machine**, **1 milk frothing machine**, and **1 juice tap** shared as limited resources
-- **20 customers** arriving at random intervals, ordering drinks, waiting for seats, and leaving once finished
+## What's actually happening here
 
-Each barista and customer is simulated as a **separate thread**, competing and cooperating for shared resources without violating thread-safety rules (no `Thread.stop`, `resume`, `suspend`, `interrupt`, or `setDaemon`).
+Three baristas sleep until a customer shows up, then scramble to make drinks using whatever machines are free. Customers wander in randomly, join a queue if it's busy, grab a seat if one's open (or wait it out, or just get tired and leave), and eventually get their coffee — cappuccino, espresso, or juice, in that order of popularity.
 
-## ☕ How It Works
+The catch: there's only one of each machine. So if two baristas both need the espresso machine at the same time, one of them waits. No cheating, no shortcuts, no `Thread.stop()` — just proper synchronization doing its job.
 
-**Baristas:**
-- Sleep when no customers are waiting, and wake when a customer arrives
-- Prepare drinks based on machine requirements:
-  - Cappuccino (RM9) — needs espresso machine + milk frother
-  - Espresso (RM6) — needs espresso machine
-  - Juice (RM7) — needs juice tap
-- Report machine acquisition/release and order completion in real time
+## The building blocks
 
-**Customers:**
-- Leave immediately if more than 5 people are already waiting
-- Queue in **arrival order** (longest-waiting served first)
-- Take a seat once available, preferring not to share a table with strangers (up to a wait threshold)
-- Some customers get tired of standing and leave before being served
-- Report entering, ordering, sitting, sipping, and leaving events
-- Order distribution: 70% Cappuccino, 20% Espresso, 10% Juice
+- **Semaphores** — gatekeeping the espresso machine, frother, and juice tap so only one barista uses each at a time
+- **LinkedBlockingQueue** — keeps the customer line honest (first come, first served)
+- **AtomicInteger** — counts drinks sold and total sales without threads stepping on each other
+- **synchronized / wait() / notifyAll()** — how baristas nap until a customer shows up, and how seating gets sorted out
 
-The café closes once all customers have left and all baristas are asleep.
-
-## 🧵 Concurrency Concepts Used
-
-- **`Semaphore`** — controls exclusive access to the espresso machine, milk frother, and juice tap
-- **`LinkedBlockingQueue`** — manages the customer waiting line (FIFO ordering)
-- **`AtomicInteger`** — thread-safe counters for tracking sales and drink totals
-- **`synchronized` / `wait()` / `notifyAll()`** — coordinates barista sleep/wake behavior and seating availability
-
-## 🚀 Running the Simulation
+## Running it
 
 ```bash
 javac *.java
 java Main
 ```
 
-*(adjust the entry-point class name if different)*
+Runs for under a minute, throws out a live play-by-play labeled by thread (so you can actually tell which barista or customer is doing what), and ends with a tally of drinks sold and cash made.
 
-The simulation runs for under 60 seconds and prints a live event log tagged by thread name, followed by a summary of total drinks sold and total sales for the day.
-
-## 📊 Sample Output Format
+## What you'll see in the logs
